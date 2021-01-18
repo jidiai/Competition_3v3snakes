@@ -16,8 +16,6 @@ n_return: 每个玩家的n条蛇的累积得分
   - 版本至少为2.0, 使用命令`pip install pygame==2.0.0dev8`进行安装
 - `Numpy`
 - `PILLOW`
-- `PyMySQL`
-- `rpyc`
 - `torch torchvision tensorboardX`
 
 ## 目录结构
@@ -31,7 +29,6 @@ n_return: 每个玩家的n条蛇的累积得分
 	|	|	|-- gridgame.py         // 网格类模拟器接口
 	|	|-- config.ini		        // 相关配置文件
 	|	|-- chooseenv.py 
-	|	|-- ccgame.py 
 	|	|-- snakes.py
 	|-- examples
 	|   |-- random
