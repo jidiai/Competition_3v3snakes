@@ -17,6 +17,7 @@ n_return: 每个玩家的n条蛇的累积得分
 - `Numpy`
 - `PILLOW`
 - `torch torchvision tensorboardX`
+- `gym`
 
 ## 目录结构
 ```
