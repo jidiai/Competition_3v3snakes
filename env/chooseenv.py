@@ -1,8 +1,4 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/9/11 11:17 上午   
-# 描述：选择运行环境，需要维护env_list\func_dic\config.ini（存储环境默认参数）
-
 from env.snakes import SnakeEatBeans
 import configparser
 import os

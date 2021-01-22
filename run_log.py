@@ -1,7 +1,4 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/8/6 2:49 下午   
-# 描述：将运行的脚本记录在games/logs/下； 根据input_action_type类型，选择不同的动作获取函数。保存的log可以使用render_from_log回放。
 import os
 import time
 import json

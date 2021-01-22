@@ -1,7 +1,4 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/10/30 4:15 下午   
-# 描述：
 import logging
 import time
 import os
