@@ -12,12 +12,9 @@ reward：吃到食物+1，触碰消失则扣掉（当前长度-初始化长度�
 n_return: 每个玩家的n条蛇的累积得分
 
 ## 项目依赖
-- `Pygame`
-  - 版本至少为2.0, 使用命令`pip install pygame==2.0.0dev8`进行安装
 - `Numpy`
 - `PILLOW`
-- `torch torchvision tensorboardX`
-- `gym`
+- `torch torchvision tensorboardX` 可选
 
 ## 目录结构
 ```
@@ -32,11 +29,14 @@ n_return: 每个玩家的n条蛇的累积得分
 	|	|-- chooseenv.py 
 	|	|-- snakes.py
 	|-- examples
-	|   |-- random
-	|   |   |-- randomagent.py      // random策略
+	|   |-- random                  // 随机策略
 	|   |   |-- submission.py       // 示例提交文件
+	|   |-- myagent                 // 自定义策略
+	|   |   |-- dqn.py              
+	|   |   |-- submission.py       // 主文件入口，需包含my_controller
 	|-- utils                       // 算法环境 主仓库工具包
-	|-- run.py		                // 运行游戏	
+	|-- run_log.py		            // 运行游戏 并产生 json log
+	|-- replay	                    // 回放工具，点开replay.html 并上传运行游戏产生的json即可回放
 ```
 
 
