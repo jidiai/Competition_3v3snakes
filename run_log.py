@@ -2,16 +2,12 @@
 # 作者：zruizhi   
 # 创建时间： 2020/8/6 2:49 下午   
 # 描述：将运行的脚本记录在games/logs/下； 根据input_action_type类型，选择不同的动作获取函数。保存的log可以使用render_from_log回放。
-import os, sys
+import os
 import time
 import json
 from env.chooseenv import make
 from utils.get_logger import get_logger
 from env.obs_interfaces.observation import obs_type
-
-
-# 0:命令行输入 1：random-agent 2:评测算法
-input_action_type = 2
 
 
 def get_players_and_action_space_list(g):
@@ -90,7 +86,6 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list, save_file=Fal
         import_name = "my_controller"
         import_s = "from %s import %s as %s" % (import_path, import_name, function_name)
         print(import_s)
-        # sys.exit()
         exec(import_s, globals())
 
     st = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -128,11 +123,9 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list, save_file=Fal
 
 if __name__ == "__main__":
     env_type = "snakes_3v3"
-    render_mode = False
-    run_local = False
-
     game = make(env_type, conf=None)
 
+    # 可选 random, myagent
     policy_list = ["random", "random"]
 
     player_id, actions_space = get_players_and_action_space_list(game)
