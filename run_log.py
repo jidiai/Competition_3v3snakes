@@ -47,14 +47,12 @@ def get_joint_action_eval(game, player_ids, policy_list, actions_spaces):
 
         if game.obs_type[policy_i] == "grid":
             obs_list = game.get_grid_many_observation(game.current_state, players_id_list)
-            obs_space_list = game.get_grid_many_obs_space(players_id_list)
         elif game.obs_type[policy_i] == "vector":
             obs_list = game.get_vector_many_observation(game.current_state, players_id_list)
-            obs_space_list = game.get_vector_many_obs_space(players_id_list)
 
         action_space_list = actions_spaces[policy_i]
         function_name = 'm%d' % policy_i
-        each = eval(function_name)(obs_list, action_space_list, obs_space_list)
+        each = eval(function_name)(obs_list, action_space_list, game.is_act_continuous)
         if len(each) != game.agent_nums[policy_i]:
             error = "模型动作空间维度%d不正确！应该是%d" % (len(each), game.agent_nums[policy_i])
             raise Exception(error)
@@ -87,9 +85,9 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list, save_file=Fal
 
     st = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     game_info = {"game_name": env_name, "n_player": g.n_player, "board_height": g.board_height,
-                     "board_width": g.board_width, "init_info": g.init_info,
-                     "start_time": st,
-                     "mode": "terminal"}
+                 "board_width": g.board_width, "init_info": g.init_info,
+                 "start_time": st,
+                 "mode": "terminal"}
 
     steps = []
     while not g.is_terminal():
@@ -123,7 +121,7 @@ if __name__ == "__main__":
     game = make(env_type, conf=None)
 
     # 可选 random, myagent
-    policy_list = ["random", "random"]
+    policy_list = ["random", "myagent"]
 
     player_id, actions_space = get_players_and_action_space_list(game)
     run_game(game, env_type, player_id, actions_space, policy_list)

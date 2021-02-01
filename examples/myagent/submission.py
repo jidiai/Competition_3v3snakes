@@ -134,7 +134,7 @@ agent = DQN(state_dim_wrapped, action_dim)
 model_path = os.path.dirname(os.path.abspath(__file__)) + '/critic_net.pth'
 agent.load(model_path)
 
-def my_controller(observation_list, action_space_list, obs_space_list):
+def my_controller(observation_list, action_space_list, is_act_continuous):
     joint_action = []
     obs_ = state_wrapper(observation_list[0])
     for n in range(3):

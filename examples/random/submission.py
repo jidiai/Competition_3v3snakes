@@ -8,7 +8,7 @@ def single_action(single_action_space):
     return player
 
 
-def my_controller(observation_list, action_space_list, obs_space_list):
+def my_controller(observation_list, action_space_list, is_act_continuous):
     joint_action = []
     for i in range(len(observation_list)):
         player = single_action(action_space_list[0])
