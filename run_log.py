@@ -49,6 +49,8 @@ def get_joint_action_eval(game, player_ids, policy_list, actions_spaces):
             obs_list = game.get_grid_many_observation(game.current_state, players_id_list)
         elif game.obs_type[policy_i] == "vector":
             obs_list = game.get_vector_many_observation(game.current_state, players_id_list)
+        elif game.obs_type[policy_i] == "dict":
+            obs_list = game.get_dict_many_observation(game.current_state, players_id_list)
 
         action_space_list = actions_spaces[policy_i]
         function_name = 'm%d' % policy_i
@@ -61,12 +63,12 @@ def get_joint_action_eval(game, player_ids, policy_list, actions_spaces):
     return joint_action
 
 
-def run_game(g, env_name, player_ids, actions_spaces, policy_list, save_file=False, json_file=True):
+def run_game(g, env_name, player_ids, actions_spaces, policy_list, render_mode):
     """
     This function is used to generate log for Vue rendering. Saves .json file
     """
     log_path = os.getcwd() + '/logs/'
-    logger = get_logger(log_path, g.game_name, save_file, json_file)
+    logger = get_logger(log_path, g.game_name, json_file=render_mode)
     random_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/random/submission.py"
     myagent_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/myagent/submission.py"
 
@@ -120,8 +122,11 @@ if __name__ == "__main__":
     env_type = "snakes_3v3"
     game = make(env_type, conf=None)
 
+    # 以json file形式保存log, 通过replay/replay.html上传查看回放。
+    render_mode = True
+
     # 可选 random, myagent
-    policy_list = ["random", "myagent"]
+    policy_list = ["random", "random"]
 
     player_id, actions_space = get_players_and_action_space_list(game)
-    run_game(game, env_type, player_id, actions_space, policy_list)
+    run_game(game, env_type, player_id, actions_space, policy_list, render_mode)
