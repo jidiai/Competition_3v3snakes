@@ -126,7 +126,7 @@ if __name__ == "__main__":
     render_mode = True
 
     # 可选 random, myagent
-    policy_list = ["random", "random"]
+    policy_list = ["random", "myagent"]
 
     player_id, actions_space = get_players_and_action_space_list(game)
     run_game(game, env_type, player_id, actions_space, policy_list, render_mode)

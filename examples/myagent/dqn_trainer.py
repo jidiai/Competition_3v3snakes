@@ -1,24 +1,13 @@
-from IPython import display
-import matplotlib.pyplot as plt
-
-import gym
-import math
 import random
-
-import time
-import datetime
-
+import os
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-import os
-# TODO 路径
 from pathlib import Path
 import sys
-base_dir = Path(__file__).resolve().parent.parent
+base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 
 from env.chooseenv import make
@@ -29,84 +18,58 @@ import argparse
 class Network(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
-        # print('input_size, hidden_size, output_size',input_size, hidden_size, output_size)
         self.linear1 = nn.Linear(input_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        # print('x', x.shape)
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
         return x
 
+
 class DQN(object):
-    def __init__(self, state_dim, action_dim):
+    def __init__(self, state_dim, action_dim, args):
         self.state_dim = state_dim
         self.action_dim = action_dim
 
-        # hyper paras #TODO
-        self.hidden_dim = 64
-        self.lr = 0.001
-        self.capacity = 1280
-        self.batch_size = 64
-        self.gamma = 0.8
+        self.hidden_dim = args.hidden_dim
+        self.lr = args.lr
+        self.buffer_size = args.buffer_size
+        self.batch_size = args.batch_size
+        self.gamma = args.gamma
 
-        self.critic = Network(self.state_dim, self.hidden_dim, self.action_dim)
-        self.optimizer = optim.Adam(self.critic.parameters(), lr=self.lr)
+        self.critic_eval = Network(self.state_dim, self.hidden_dim, self.action_dim)
+        self.critic_target = Network(self.state_dim, self.hidden_dim, self.action_dim)
+        self.optimizer = optim.Adam(self.critic_eval.parameters(), lr=self.lr)
 
         self.buffer = []
-        self.steps = 0
-        self.learn_times = 0
 
-        # TODO exploration
-        # self.eps_low = 0.0
-        # self.eps_high = 1.0
-        # self.eps_decay = 0.99
-        self.eps_fix = 0.1
+        self.game_name = args.game_name
+        self.mode = args.mode
 
-        # TODO 保存
-        self.game_name = game_name
+        self.eps_start = args.epsilon
+        self.eps_end = 0.05
+        self.eps_delay = 0.8 / args.max_episode
+        self.learn_step_counter = 0
+        self.target_replace_iter = args.target_replace
 
-        model_dir = Path('./models') / self.game_name
-        if not model_dir.exists():
-            curr_run = 'run1'
-        else:
-            exst_run_nums = [int(str(folder.name).split('run')[1]) for folder in
-                             model_dir.iterdir() if
-                             str(folder.name).startswith('run')]
-            if len(exst_run_nums) == 0:
-                curr_run = 'run1'
-            else:
-                curr_run = 'run%i' % (max(exst_run_nums) + 1)
-        run_dir = model_dir / curr_run
-        log_dir = run_dir / 'logs'
-        para_dir = run_dir / 'params'
-        os.makedirs(log_dir)
-        os.makedirs(para_dir)
-        self.writer = SummaryWriter(str(log_dir))
-        self.para_dir = para_dir
-
-        # TODO
-        self.train = True
-
-    def select_action(self, observation):
-        if self.train:
-            self.steps += 1
-            # eps = self.eps_low + (self.eps_high - self.eps_low) * (math.exp(-1.0 * self.steps / self.eps_decay))
-            eps = self.eps_fix
+    def select_action(self, observation, train=True):
+        if train:
+            eps = max(self.eps_end, self.eps_start - self.eps_delay)
             if random.random() < eps:
                 action = random.randrange(self.action_dim)
             else:
                 observation = torch.tensor(observation, dtype=torch.float).view(1, -1)
-                action = torch.argmax(self.critic(observation)).item()
-            return action
+                # print('observation', observation.size()) # 1, 213
+                # print('self.critic(observation)', self.critic(observation).size()) # 1, 4
+                action = torch.argmax(self.critic_eval(observation)).item()
         else:
             observation = torch.tensor(observation, dtype=torch.float).view(1, -1)
-            action = torch.argmax(self.critic(observation)).item()
-            return action
+            action = torch.argmax(self.critic_eval(observation)).item()
+        return action
 
     def store_transition(self, obs, action, reward, obs_):
-        if len(self.buffer) == self.capacity:
+        if len(self.buffer) == self.buffer_size:
             self.buffer.pop(0)
         self.buffer.append([obs, action, reward, obs_])
 
@@ -114,113 +77,82 @@ class DQN(object):
         if (len(self.buffer)) < self.batch_size:
             return
 
-        self.learn_times += 1
         samples = random.sample(self.buffer, self.batch_size)
         obs, action, reward, obs_ = zip(*samples)
-        obs = torch.tensor(obs, dtype=torch.float)
+        obs = torch.tensor(obs, dtype=torch.float).squeeze()
         action = torch.tensor(action, dtype=torch.long).view(self.batch_size, -1)
-        reward = torch.tensor(reward, dtype=torch.float).view(self.batch_size, -1)
-        obs_ = torch.tensor(obs_, dtype=torch.float)
+        reward = torch.tensor(reward, dtype=torch.float).view(self.batch_size, -1).squeeze()
+        obs_ = torch.tensor(obs_, dtype=torch.float).squeeze()
 
-        # print('obs_', obs_.shape)
-        q_pred = reward + self.gamma * torch.max(self.critic(obs_).detach(), dim=1)[0].view(self.batch_size, -1)
-        q_current = self.critic(obs).gather(1, action)
-
+        q_eval = self.critic_eval(obs).gather(1,action)
+        q_next = self.critic_target(obs_).detach()
+        q_target = (reward + self.gamma * q_next.max(1)[0]).view(self.batch_size,1)
         loss_fn = nn.MSELoss()
-        loss = loss_fn(q_pred, q_current)
-        self.writer.add_scalar(self.game_name + '/loss', loss, self.learn_times)
+        loss = loss_fn(q_eval, q_target)
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
-    def save(self):
-        print(self.para_dir)
-        torch.save(self.critic.state_dict(),  './' + str(self.para_dir) + '/critic_net.pth')
-        # torch.save(self.optimizer.state_dict(), 'model_checkpoint.optimizer')
+        if self.learn_step_counter % self.target_replace_iter == 0:
+            self.critic_target.load_state_dict(self.critic_eval.state_dict())
+        self.learn_step_counter += 1
+
+        return loss
+
+    def save(self, save_path):
+        torch.save(self.critic_eval.state_dict(),  save_path)
 
     def load(self, file):
         self.critic.load_state_dict(torch.load(file))
-        # self.optimizer.load_state_dict(torch.load('model_checkpoint.optimizer'))
 
-def RL_train(times, env):
-    score = []
-    for i in range(times):
-        obs = env.reset()
+
+def RL_evaluate(args):
+    game_name = "snakes_3v3"
+    global env
+    env = make(game_name)
+    action_dim = env.action_dim
+    state_dim = env.input_dimension
+    state_dim_wrapped = state_dim + 13
+    players_id_list = range(0,3)
+
+    agent = DQN(state_dim_wrapped, action_dim, args)
+
+    obs = env.reset()
+    obs_list = env.get_dict_many_observation(obs, players_id_list)
+    for i in players_id_list:
+        obs.append(get_observations(obs_list, i))
+    joint_action = []
+    steps = 0
+    reward_tot = 0
+    obs = []
+    for step in range(env.max_step):
+        # player 1
+        for n in range(env.agent_nums[0]):
+            joint_action.append(agent.select_action(obs[n], train=False))
+        # player 2
+        for n in range(env.agent_nums[1]):
+            joint_action.append(np.random.randint(action_dim))
+
+        joint_action_ = action_wrapper(joint_action)
+
+        obs_next, reward, done, info_before, info_after = env.step(joint_action_)
+
+        obs_next_list = env.get_dict_many_observation(obs_next, players_id_list)
+        for i in players_id_list:
+            obs_next.append(get_observations(obs_next_list, i))
+
+        for n in range(env.agent_nums[0]):
+            agent.store_transition(obs[n],
+                                   joint_action[n],
+                                   reward[n],
+                                   obs_next[n])
+        obs = obs_next
+
         joint_action = []
-        steps = 0
-        reward_tot = 0
-        for step in range(env.max_step):
-            # env._render()
-            obs_ = state_wrapper(obs)
-            # TODO hard code 200
-            # joint action eg :
-            # [[[0, 0, 0, 1]], [[1, 0, 0, 0]], [[0, 0, 0, 1]], [[0, 0, 1, 0]], [[0, 0, 0, 1]], [[0, 0, 1, 0]]]
-            # print('obs_ length', len(obs_))
-            for n in range(game.agent_nums[0]):
-                # print('obs_[0:200] ', obs_[0:200] )
-                # print('obs_[(200+n):(200+n+2)]', obs_[(200+n):(200+n+2)])
-                # print('obs_[0:200] + obs_[(200+n):(200+n+2)]', len(obs_[0:200] + obs_[(200+n):(200+n+2)]))
-                joint_action.append(agent.select_action(obs_[0:200] + obs_[(200+n):(200+n+2)]))
-
-            for n in range(game.agent_nums[1]):
-                joint_action.append(np.random.randint(action_dim))
-            # print('joint_action', joint_action)
-            joint_action_ = action_wrapper(joint_action)
-            #TODO reward
-            obs_next, reward, done, info_before, info_after = env.step(joint_action_)
-            # print('reward', reward)
-            obs_next_ = state_wrapper(obs_next)
-            # print('obs_next_ length', len(obs_next_))
-
-            for n in range(game.agent_nums[0]):
-                # print('joint_action[n]',joint_action[n])
-                # print(obs_next_[(200 + n):(200 + n + 2)])
-                agent.store_transition( obs_[0:200] + obs_[(200+n):(200+n+2)],
-                                        joint_action[n],
-                                        reward[n],
-                                        obs_next_[0:200] + obs_next_[(200+n):(200+n+2)])
-                agent.learn()
-            obs = obs_next
-
-            joint_action = []
-            reward_tot += np.sum(reward[0:3])
-            steps += 1
-
-            if env.is_terminal():
-                break
-        agent.writer.add_scalar( game_name  + '/return', reward_tot, i)
-        agent.writer.add_scalar( game_name  + '/steps', steps, i)
-        score.append(reward_tot)
-        print('train time: ', i, 'reward_tot: ', reward_tot, '  average score %.2f' % np.mean(score[-100:]),'steps: ', steps)
-    agent.save()
-    # plot(score)
-
-def RL_evaluate(times, env):
-    score = []
-    for i in range(times):
-        obs = env.reset()
-        joint_action = []
-        steps = 0
-        reward_tot = 0
-        for step in range(env.max_step):
-            # env._render()
-            obs_ = state_wrapper(obs)
-            for n in range(game.n_player):
-                joint_action.append(agent.select_action(obs_[0:64] + obs_[64+n]))
-            joint_action_ = action_wrapper(joint_action)
-            #TODO reward
-            obs_next, reward, done, info_before, info_after = env.step(joint_action_)
-            obs = obs_next
-
-            joint_action = []
-            reward_tot += reward[0]
-            steps += 1
-
-            if env.is_terminal():
-                break
-        score.append(reward_tot)
-        print('train time: ', i, 'reward_tot: ', reward_tot, 'steps: ', steps)
-    print('average score: ', np.mean(np.array(score)))
+        reward_tot += np.sum(reward[0:3])
+        steps += 1
+    # writer.add_scalar(game_name + 'train/return', reward_tot, epi)
 
 def get_random_1_person(action_space):
     joint_action = []
@@ -234,34 +166,6 @@ def get_random_1_person(action_space):
         joint_action.append(player)
     return joint_action
 
-def state_wrapper(obs):
-    '''
-    :param state:
-    :return: wrapped state
-    '''
-    obs_ = []
-    for i in range(game.board_height):
-        for j in range(game.board_width):
-            obs_.append(obs[i][j][0])
-    # TODO hard code
-    for n in game.snakes_position:
-        obs_.append(game.snakes_position[n][0][0])
-        obs_.append(game.snakes_position[n][0][1])
-    return obs_
-'''
-def action_wrapper(joint_action):
-    joint_action_ = [[0] * 15 for c in range(2)]
-    joint_action_fillin = [joint_action_ for m in range(2)]
-    for n in range(len(joint_action)):
-        cnt = 0
-        for i in range(15):
-            for j in range(15):
-                if cnt == joint_action[n]:
-                    joint_action_fillin[n][0][i] = 1
-                    joint_action_fillin[n][1][j] = 1
-                    return joint_action_fillin
-                else: cnt += 1
-'''
 
 def action_wrapper(joint_action):
     '''
@@ -269,56 +173,135 @@ def action_wrapper(joint_action):
     :return: wrapped joint action: one-hot
     '''
     joint_action_ = []
-    for a in range(game.n_player):
+    for a in range(env.n_player):
         action_a = joint_action[a]
-        each = [0] * game.action_dim
+        each = [0] * env.action_dim
         each[action_a] = 1
         action_one_hot = [[each]]
         joint_action_.append([action_one_hot[0][0]])
     return joint_action_
 
-def plot(score):
-    display.clear_output(wait=True)
-    display.display(plt.gcf())
-    plt.figure(figsize=(20, 10))
-    plt.clf() # Clear figure清除所有轴，但是窗口打开，这样它可以被重复使用
-    plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Duration')
-    plt.plot(score)
-    plt.text(len(score) - 1, score[-1], str(score[-1]))
-    plt.show()
+
+def get_observations(key_info, index):
+    '''
+    observation space: env.input_dimension + 6 * 2 (snake head) + 1 (index) = 213
+    '''
+    grid = [[[0] * env.cell_dim for _ in range(env.board_width)] for _ in range(env.board_height)]
+    for key in key_info[0]:
+        for pos in key_info[0][key]:
+            grid[pos[0]][pos[1]] = [key]
+    obs_ = []
+    for i in range(env.board_height):
+        for j in range(env.board_width):
+            obs_.append(grid[i][j])
+    for key in key_info[0]:
+        if key > 1:
+            obs_.append([key_info[0][key][0][0]])
+            obs_.append([key_info[0][key][0][1]])
+    obs_.append([index])
+    return obs_
+
+
+def main(args):
+    game_name = "snakes_3v3"
+    global env
+    env = make(game_name)
+    action_dim = env.action_dim
+    state_dim = env.input_dimension
+    state_dim_wrapped = state_dim + 13
+    players_id_list = range(0,3)
+
+    agent = DQN(state_dim_wrapped, action_dim, args)
+
+    score = []
+
+    base_dir = Path(__file__).resolve().parent.parent
+    model_dir = base_dir / Path('./models') / game_name
+
+    if not model_dir.exists():
+        curr_run = 'run1'
+    else:
+        exst_run_nums = [int(str(folder.name).split('run')[1]) for folder in
+                         model_dir.iterdir() if
+                         str(folder.name).startswith('run')]
+        if len(exst_run_nums) == 0:
+            curr_run = 'run1'
+        else:
+            curr_run = 'run%i' % (max(exst_run_nums) + 1)
+    run_dir = model_dir / curr_run
+    log_dir = run_dir / 'logs'
+    os.makedirs(log_dir)
+    if args.tensorboard and args.mode == "train":
+        writer = SummaryWriter(str(log_dir))
+
+    for epi in range(args.max_episode):
+        env.reset()
+        obs_list = env.get_dict_many_observation(env.current_state, players_id_list)
+        obs = []
+        obs_next_ = []
+        for i in players_id_list:
+            obs.append(get_observations(obs_list, i))
+        joint_action = []
+        steps = 0
+        reward_tot = 0
+        for step in range(env.max_step):
+            # player 1
+            for n in range(env.agent_nums[0]):
+                joint_action.append(agent.select_action(obs[n]))
+            # player 2
+            for n in range(env.agent_nums[1]):
+                joint_action.append(np.random.randint(action_dim))
+
+            joint_action_ = action_wrapper(joint_action)
+
+            obs_next, reward, done, info_before, info_after = env.step(joint_action_)
+
+            obs_next_list = env.get_dict_many_observation(obs_next, players_id_list)
+            for i in players_id_list:
+                obs_next_.append(get_observations(obs_next_list, i))
+
+            for n in range(env.agent_nums[0]):
+                agent.store_transition(obs[n], joint_action[n], reward[n], obs_next_[n])
+            agent.learn()
+            obs = obs_next_
+
+            joint_action = []
+            reward_tot += np.sum(reward[0:3])
+            steps += 1
+
+        score.append(reward_tot)
+        print('train time: ', epi,
+              'reward_tot: ', reward_tot,
+              'average score %.2f' % np.mean(score[-100:]))
+
+        writer.add_scalar(game_name + 'train/return', reward_tot, epi)
+
+    agent.save(run_dir / 'model.pth')
+
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    # set agent hyper parameter
+    parser.add_argument("--hidden_dim", default=64, type=int)
+    parser.add_argument("--lr", default=0.001, type=float)
+    parser.add_argument("--buffer_size", default=1280, type=int)
+    parser.add_argument("--batch_size", default=64, type=int)
+    parser.add_argument("--gamma", default=0.8, type=float)
+    parser.add_argument("--target_replace", default=100, type=int)
 
-    game_name = "snakes_3v3"
-    game = make(game_name)
-    action_dim = game.action_dim
-    state_dim = game.input_dimension
-    # TODO 2
-    state_dim_wrapped = state_dim + 2
-    print('game.action space',  game.joint_action_space)
-    print('game.agent_nums', game.agent_nums)
-    print('env board', game.board_width, game.board_height)
-    print('action_dim', action_dim, 'input_dim', state_dim, 'input_dim_wrapped', state_dim_wrapped)
-    agent = DQN(state_dim_wrapped, action_dim)
+    parser.add_argument("--epsilon", default=1, type=float)
 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--time", help="Name of environment", default="simple_push")
-    # parser.add_argument("--model_name",
-    #                     help="Name of directory to store " +
-    #                          "model/training contents", default="./model")
+    parser.add_argument("--game_name", default= "snakes_3v3")
+    parser.add_argument("--evaluate_rate", default=100, type=int)
+    parser.add_argument("--max_episode", default=100, type=int)
+    parser.add_argument("--tensorboard", default=True, type=bool)
+    parser.add_argument("--mode", default="train", type=str, help="train/eval")
+    parser.add_argument("--algo", default="DQN")
+    parser.add_argument("--log_dir", default= "DQN")
 
-    # TODO hyper: param
-    times = 2000
-    agent.train = True
+    args = parser.parse_args()
+    main(args)
 
-    if agent.train:
-        RL_train(times, game)
-    else:
-        # TODO load
-        agent.load('./models/sokoban_2p/run6/params/critic_net.pth')
-        RL_evaluate(times, game)
 
 
 
