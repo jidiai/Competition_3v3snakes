@@ -31,7 +31,7 @@ def get_players_and_action_space_list(g):
     return players_id, actions_space
 
 
-def get_joint_action_eval(game, player_ids, policy_list, actions_spaces):
+def get_joint_action_eval(game, player_ids, policy_list, actions_spaces, info_before):
     if len(policy_list) != len(game.agent_nums):
         error = "模型个数%d与玩家个数%d维度不正确！" % (len(policy_list), len(game.agent_nums))
         raise Exception(error)
@@ -46,11 +46,11 @@ def get_joint_action_eval(game, player_ids, policy_list, actions_spaces):
         players_id_list = player_ids[policy_i]
 
         if game.obs_type[policy_i] == "grid":
-            obs_list = game.get_grid_many_observation(game.current_state, players_id_list)
+            obs_list = game.get_grid_many_observation(game.current_state, players_id_list, info_before)
         elif game.obs_type[policy_i] == "vector":
-            obs_list = game.get_vector_many_observation(game.current_state, players_id_list)
+            obs_list = game.get_vector_many_observation(game.current_state, players_id_list, info_before)
         elif game.obs_type[policy_i] == "dict":
-            obs_list = game.get_dict_many_observation(game.current_state, players_id_list)
+            obs_list = game.get_dict_many_observation(game.current_state, players_id_list, info_before)
 
         action_space_list = actions_spaces[policy_i]
         function_name = 'm%d' % policy_i
@@ -92,13 +92,14 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list, render_mode):
                  "mode": "terminal"}
 
     steps = []
+    info_before = ''
     while not g.is_terminal():
         step = "step%d" % g.step_cnt
         if g.step_cnt % 10 == 0:
             print(step)
         info_dict = {}
         info_dict["time"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        joint_act = get_joint_action_eval(g, player_ids, policy_list, actions_spaces)
+        joint_act = get_joint_action_eval(g, player_ids, policy_list, actions_spaces, info_before)
         next_state, reward, done, info_before, info_after = g.step(joint_act)
         if info_before:
             info_dict["info_before"] = info_before
@@ -126,7 +127,7 @@ if __name__ == "__main__":
     render_mode = True
 
     # 可选 random, myagent
-    policy_list = ["random", "myagent"]
+    policy_list = ["random", "random"]
 
     player_id, actions_space = get_players_and_action_space_list(game)
     run_game(game, env_type, player_id, actions_space, policy_list, render_mode)

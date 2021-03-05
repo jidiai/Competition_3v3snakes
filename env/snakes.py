@@ -42,16 +42,20 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
     def get_grid_observation(self, current_state, player_id):
         return current_state
 
-    def get_dict_observation(self, current_state, player_id):
+    def get_dict_observation(self, current_state, player_id, info_before):
         key_info = {}
         for i in range(self.n_player):
             snake = self.players[i]
             key_info[snake.player_id] = snake.segments
 
         key_info[1] = self.beans_position
+        key_info['state_map'] = current_state
+        key_info['board_width'] = self.board_width
+        key_info['board_height'] = self.board_height
+        key_info['last_direction'] = info_before.get('directions') if isinstance(info_before, dict) else None
+        key_info['controlled_snake_index'] = player_id
 
         return key_info
-
     def set_action_space(self):
         action_space = [[Discrete(4)] for _ in range(self.n_player)]
         # action_space = [[4] for _ in range(self.n_player)]
@@ -92,8 +96,6 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
 
         self.generate_beans()
         self.init_info = {}
-        # self.init_info["snakes_position"] = str(self.snakes_position)
-        # self.init_info["beans_position"] = str(self.beans_position)
         self.init_info["snakes_position"] = [list(v) for k, v in sorted(self.snakes_position.items(), key=lambda item: item[0])]
         self.init_info["beans_position"] = list(self.beans_position)
         directs = []
@@ -103,7 +105,6 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         self.init_info["directions"] = directs
 
 
-        # print(self.snakes_position, "init snakes position")
         return self.update_state()
 
     def update_state(self):
@@ -119,20 +120,13 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         return next_state
 
     def step_before_info(self, info=''):
-        # head_dict = {}
-        # direction_dict = {}
         directs = []
         for i in range(len(self.players)):
             s = self.players[i]
-            # head_dict[i + 2] = s.headPos
-            # direction_dict[i + 2] = self.actions_name[s.direction]
             directs.append(self.actions_name[s.direction])
         info = {}
-        # info["head_positions"] = str(head_dict)
-        # info["directions"] = str(direction_dict)
         info["directions"] = directs
 
-        # return str(info)
         return info
 
     def is_hit(self, cur_head, snakes_position):
@@ -227,15 +221,11 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
                 s = self.players[i]
                 self.won[i] = s.score
             info_after = {}
-            # info_after["snakes_position"] = str(self.snakes_position)
-            # info_after["beans_position"] = str(self.beans_position)
-            # info_after["score"] = str(self.won)
             info_after["snakes_position"] = [list(v) for k, v in sorted(self.snakes_position.items(), key=lambda item: item[0])]
             info_after["beans_position"] = list(self.beans_position)
             info_after["hit"] = re_generatelist
             info_after["score"] = self.won
 
-            # return next_state, str(info_after)
             return next_state, info_after
 
     def clear_or_regenerate(self, snake):
