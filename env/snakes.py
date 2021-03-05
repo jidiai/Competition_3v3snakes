@@ -1,8 +1,5 @@
 from env.simulators.gridgame import GridGame
 import random
-from itertools import count
-import numpy as np
-from PIL import ImageDraw, ImageFont
 from env.obs_interfaces.observation import *
 from utils.discrete import Discrete
 
@@ -39,7 +36,7 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         flg = self.won.index(max(self.won)) + 2
         return flg
 
-    def get_grid_observation(self, current_state, player_id):
+    def get_grid_observation(self, current_state, player_id, info_before):
         return current_state
 
     def get_dict_observation(self, current_state, player_id, info_before):
@@ -56,9 +53,9 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         key_info['controlled_snake_index'] = player_id
 
         return key_info
+
     def set_action_space(self):
         action_space = [[Discrete(4)] for _ in range(self.n_player)]
-        # action_space = [[4] for _ in range(self.n_player)]
         return action_space
 
     def reset(self):
@@ -103,7 +100,6 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
             s = self.players[i]
             directs.append(self.actions_name[s.direction])
         self.init_info["directions"] = directs
-
 
         return self.update_state()
 
@@ -337,39 +333,6 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
 
         return action_dim
 
-    @staticmethod
-    def _render_board(state, board, colors, unit, fix, extra_info):
-        im = GridGame._render_board(state, board, colors, unit, fix)
-        draw = ImageDraw.Draw(im)
-        fnt = ImageFont.truetype("Courier.dfont", 16)
-        for i, pos in zip(count(1), extra_info):
-            x, y = pos
-            draw.text(((y + 1 / 4) * unit, (x + 1 / 4) * unit),
-                      "#{}".format(i),
-                      font=fnt,
-                      fill=(0, 0, 0))
-
-        return im
-
-    def render_board(self):
-        extra_info = [tuple(x.headPos) for x in self.players]
-        im_data = np.array(
-            SnakeEatBeans._render_board(self.get_render_data(self.current_state), self.grid, self.colors, self.grid_unit, self.grid_unit_fix,
-                                        extra_info))
-        self.game_tape.append(im_data)
-        return im_data
-
-    @staticmethod
-    def parse_extra_info(data):
-        # return eval(re.search(r'({.*})', data['info_after']).group(1)).values()
-        # d = (eval(eval(data)['snakes_position']).values())
-        if isinstance(data, str):
-            d = eval(data)['snakes_position']
-        else:
-            d = data['snakes_position']
-
-        return [i[0] for i in d]
-
 
 class Snake():
     def __init__(self, player_id, board_width, board_height, init_len):
@@ -398,8 +361,6 @@ class Snake():
             while n_direct + self.direction == 0:
                 n_direct = random.choice(self.actions)
             self.direction = n_direct
-        #     print("方向不合法，重新生成")
-        # print("direction", self.actions_name[self.direction])
 
     # 超过边界，可以穿越
     def update_position(self, position):
@@ -424,8 +385,6 @@ class Snake():
             cur_head[0] += 1
 
         cur_head = self.update_position(cur_head)
-        # print("cur head", cur_head)
-        # print("cur snakes positions", snakes_position)
 
         self.segments.insert(0, cur_head)
         self.headPos = self.segments[0]
