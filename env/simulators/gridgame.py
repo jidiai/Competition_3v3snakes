@@ -137,7 +137,7 @@ class GridGame(Game):
         for i in range(len(self.joint_action_space)):
             player = []
             for j in range(len(self.joint_action_space[i])):
-                each = [0] * self.joint_action_space[i][j]
+                each = [0] * self.joint_action_space[i][j].n
                 player.append(each)
             joint_action.append(player)
         return joint_action
