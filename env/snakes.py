@@ -303,11 +303,11 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         return r
 
     def is_terminal(self):
-        all_member = len(self.beans_position)
+        all_member = self.n_beans
         for s in self.players:
             all_member += len(s.segments)
 
-        return self.step_cnt > self.max_step or all_member >= self.board_height * self.board_width
+        return self.step_cnt > self.max_step or all_member > self.board_height * self.board_width
 
     def encode(self, actions):
         joint_action = self.init_action_space()
