@@ -6,7 +6,7 @@ from utils.discrete import Discrete
 
 class SnakeEatBeans(GridGame, GridObservation, DictObservation):
     def __init__(self, conf):
-        # 给状态0和1加上预设的颜色值可能会更好一点
+        self.terminate_flg = False
         colors = conf.get('colors', [(255, 255, 255), (255, 140, 0)])
         super(SnakeEatBeans, self).__init__(conf, colors)
         # 0: 没有 1：食物 2-n_player+1:各玩家蛇身
@@ -167,8 +167,8 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         not_valid = self.is_not_valid_action(joint_action)
         if not not_valid:
             # 各玩家行动
+            # print("current_state", self.current_state)
             eat_snakes = [0] * self.n_player
-
             for i in range(self.n_player):
                 snake = self.players[i]
                 act = self.actions[joint_action[i][0].index(1)]
@@ -204,17 +204,19 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
                         snake.snake_reward = self.init_len - len(snake.segments) + 1
                     else:
                         snake.snake_reward = self.init_len - len(snake.segments)
+                    snake.segments = []
+            for i in range(self.n_player):
+                snake = self.players[i]
+                if re_generatelist[i] == 1:
                     snake = self.clear_or_regenerate(snake)
                 self.snakes_position[snake.player_id] = snake.segments
                 snake.score = snake.get_score()
-
             # 更新状态
             self.generate_beans()
 
             next_state = self.update_state()
             self.current_state = next_state
             self.step_cnt += 1
-
             self.won = [0] * self.n_player
 
             for i in range(self.n_player):
@@ -247,10 +249,8 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
                             if cur not in seg:
                                 seg.append(cur)
                             for i in range(4):
-                                nx = direct_x[i] + cur[0]
-                                ny = direct_y[i] + cur[1]
-                                if nx < 0 or nx >= self.board_height or ny < 0 or ny >= self.board_width:
-                                    continue
+                                nx = (direct_x[i] + cur[0]) % self.board_height
+                                ny = (direct_y[i] + cur[1]) % self.board_width
                                 if grid[nx][ny] == 0 and [nx, ny] not in q:
                                     grid[nx][ny] = 1
                                     q.append([nx, ny])
@@ -280,7 +280,9 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
                                 return True
             return False
 
-        can_regenerate()
+        flg = can_regenerate()
+        if not flg:
+            self.terminate_flg = True
         return snake
 
     def is_not_valid_action(self, joint_action):
@@ -299,29 +301,15 @@ class SnakeEatBeans(GridGame, GridObservation, DictObservation):
         for i in range(self.n_player):
             r[i] = self.players[i].snake_reward
             self.n_return[i] += r[i]
-        # print("score:", self.won)
         return r
 
     def is_terminal(self):
         all_member = self.n_beans
         for s in self.players:
             all_member += len(s.segments)
+        is_done = self.step_cnt > self.max_step or all_member > self.board_height * self.board_width
 
-        return self.step_cnt > self.max_step or all_member > self.board_height * self.board_width
-
-    def encode(self, actions):
-        joint_action = self.init_action_space()
-        if len(actions) != self.n_player:
-            raise Exception("action输入维度不正确！", len(actions))
-        for i in range(self.n_player):
-            joint_action[i][0][int(actions[i])] = 1
-        return joint_action
-
-    def get_terminal_actions(self):
-        print("请输入%d个玩家的动作方向[0-3](上下左右)，空格隔开：" % self.n_player)
-        cur = input()
-        actions = cur.split(" ")
-        return self.encode(actions)
+        return is_done or self.terminate_flg
 
     def be_eaten(self, snake_pos):
         for bean in self.beans_position:
