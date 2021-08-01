@@ -1,0 +1,30 @@
+{
+"snakes_3v3": {
+    "class_literal": "SnakeEatBeans",
+    "n_player": 6,
+    "board_width": 20,
+    "board_height": 10,
+    "cell_range": 8,
+    "n_beans": 5,
+    "max_step": 200,
+    "game_name": "snakes",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [3,3],
+    "obs_type": ["dict","dict"]
+},
+      "snakes_5p": {
+    "class_literal": "SnakeEatBeans",
+    "n_player": 5,
+    "board_width": 20,
+    "board_height": 10,
+    "cell_range": 7,
+    "n_beans": 5,
+    "max_step": 200,
+    "game_name": "snakes",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [5],
+    "obs_type": ["dict"]
+  }
+}

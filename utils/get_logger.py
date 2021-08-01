@@ -4,7 +4,7 @@ import time
 import os
 
 
-def get_logger(log_path, name, save_file=False, console_out=True, json_file=True):
+def get_logger(log_path, name, save_file=False, console_out=False, json_file=False):
     if not os.path.exists(log_path):
         os.mkdir(log_path)
 
