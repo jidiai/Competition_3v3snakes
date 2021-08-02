@@ -1,5 +1,12 @@
 # Competition_3v3snakes
 
+### Environment
+
+![image](https://github.com/jidiai/Competition_3v3snakes/tree/master/examples/assets/snakesdemo.png)
+
+Check details in Jidi Competition [RLChina2021智能体竞赛] (http://www.jidiai.cn/compete_detail?compete=6)
+
+
 ### Dependency
 You need to create competition environment.
 >conda create -n snake1v1 python=3.6

@@ -35,7 +35,6 @@ def get_players_and_action_space_list(g):
     players_id = []
     actions_space = []
     for policy_i in range(len(g.obs_type)):
-        print("g.obs_type: ", g.obs_type)
         if policy_i == 0:
             players_id_list = range(n_agent_num[policy_i])
         else:
@@ -73,8 +72,6 @@ def get_joint_action_eval(game, multi_part_agent_ids, policy_list, actions_space
         for i in range(len(agents_id_list)):
             agent_id = agents_id_list[i]
             a_obs = all_observes[agent_id]
-            print("=== agent_id: ", agent_id)
-            print("== a_obs: ", a_obs)
             each = eval(function_name)(a_obs, action_space_list[i], game.is_act_continuous)
             # if len(each) != game.agent_nums[policy_i]:
             #     error = "模型%d动作空间维度%d不正确！应该是%d" % (int(t_agents_id[policy_i]), len(each), game.agent_nums[policy_i])
