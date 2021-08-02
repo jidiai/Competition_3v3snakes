@@ -1,15 +1,35 @@
 import torch
 from torch import nn
-from pathlib import Path
-import sys
-base_dir = Path(__file__).resolve().parent
-sys.path.append(str(base_dir))
-from utils import *
 from torch.distributions import Categorical
 import numpy as np
 
 
 HIDDEN_SIZE=256
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+from typing import Union
+Activation = Union[str, nn.Module]
+
+_str_to_activation = {
+    'relu': torch.nn.ReLU(),
+    'tanh': nn.Tanh(),
+    'identity': nn.Identity(),
+    'softmax': nn.Softmax(dim=-1),
+}
+
+def mlp(sizes,
+        activation: Activation = 'relu',
+        output_activation: Activation = 'identity'):
+    if isinstance(activation, str):
+        activation = _str_to_activation[activation]
+    if isinstance(output_activation, str):
+        output_activation = _str_to_activation[output_activation]
+
+    layers = []
+    for i in range(len(sizes) - 1):
+        act = activation if i < len(sizes) - 2 else output_activation
+        layers += [nn.Linear(sizes[i], sizes[i + 1]), act]
+    return nn.Sequential(*layers)
 
 
 class Actor(nn.Module):
@@ -23,7 +43,7 @@ class Actor(nn.Module):
         self.args = args
 
         sizes_prev = [obs_dim, HIDDEN_SIZE]
-        sizes_post = [HIDDEN_SIZE << 1, HIDDEN_SIZE, act_dim]
+        sizes_post = [HIDDEN_SIZE, HIDDEN_SIZE, act_dim]
 
         self.prev_dense = mlp(sizes_prev)
         self.post_dense = mlp(sizes_post, output_activation=output_activation)

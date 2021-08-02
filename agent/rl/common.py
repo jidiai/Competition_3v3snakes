@@ -1,11 +1,4 @@
-
-
-
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-
-
-
+import numpy as np
 
 
 def get_surrounding(state, width, height, x, y):
@@ -15,6 +8,7 @@ def get_surrounding(state, width, height, x, y):
                    state[y][(x + 1) % width]]  # right
 
     return surrounding
+
 
 def make_grid_map(board_width, board_height, beans_positions:list, snakes_positions:dict):
     snakes_map = [[[0] for _ in range(board_width)] for _ in range(board_height)]
@@ -26,6 +20,7 @@ def make_grid_map(board_width, board_height, beans_positions:list, snakes_positi
         snakes_map[bean[0]][bean[1]][0] = 1
 
     return snakes_map
+
 
 # Self position:        0:head_x; 1:head_y
 # Head surroundings:    2:head_up; 3:head_down; 4:head_left; 5:head_right
@@ -43,7 +38,6 @@ def get_observations(state, agents_index, obs_dim, height, width):
     snake_map = make_grid_map(board_width, board_height, beans_positions, snakes_positions)
     state = np.array(snake_map)
     state = np.squeeze(snake_map, axis=2)
-    print("state_map: ", state)
 
     observations = np.zeros((len(agents_index), obs_dim))
     snakes_position = np.array(snakes_positions_list, dtype=object)
