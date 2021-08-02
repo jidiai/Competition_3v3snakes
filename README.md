@@ -2,9 +2,9 @@
 
 ### Environment
 
-![image](https://github.com/jidiai/Competition_3v3snakes/tree/master/examples/assets/snakesdemo.png)
+![image](https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/snakesdemo.gif)
 
-Check details in Jidi Competition [RLChina2021智能体竞赛] (http://www.jidiai.cn/compete_detail?compete=6)
+Check details in Jidi Competition [RLChina2021智能体竞赛](http://www.jidiai.cn/compete_detail?compete=6)
 
 
 ### Dependency
