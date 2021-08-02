@@ -141,7 +141,6 @@ def get_observations(state, agents_index, obs_dim, height, width):
         snake_heads = np.array(snake_heads[1:])
         snake_heads -= snakes_position[i][0]
         observations[i][16:] = snake_heads.flatten()[:]
-    print("observation: ", observations)
     return observations
 
 

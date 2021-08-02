@@ -4,13 +4,15 @@ import datetime
 
 from tensorboardX import SummaryWriter
 import os
+
 from pathlib import Path
 import sys
-base_dir = Path(__file__).resolve().parent.parent.parent
+base_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(base_dir))
-from bicnet_agent import BiCNet
-from rl_trainer.utils import *
+from algo.ddpg import DDPG
+from common import *
 from env.chooseenv import make
+
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -45,7 +47,7 @@ def main(args):
     tensorboard_path = os.path.join(base_path, 'tensorboard', args.log_dir)
     writer = SummaryWriter(log_dir=tensorboard_path)
 
-    model = BiCNet(obs_dim, act_dim, ctrl_agent_num, args)
+    model = DDPG(obs_dim, act_dim, ctrl_agent_num, args)
     # model.load_model()
 
     episode = 0
@@ -64,7 +66,7 @@ def main(args):
 
             # For each agents i, select and execute action a:t,i = a:i,θ(s_t) + Nt
             logits = model.choose_action(obs)
-            print("logits: ", logits)
+
             # actions = logits_random(act_dim, logits)
             actions = logits_greedy(state, logits, height, width)
 

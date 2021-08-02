@@ -1,4 +1,8 @@
-from rl_trainer.utils import *
+from pathlib import Path
+import sys
+base_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(base_dir))
+from common import *
 
 HIDDEN_SIZE = 256
 
@@ -6,7 +10,6 @@ HIDDEN_SIZE = 256
 class Actor(nn.Module):
     def __init__(self, obs_dim, act_dim, num_agents, args, output_activation='tanh'):
         super().__init__()
-        print("output_activation: ", output_activation)
         self.obs_dim = obs_dim
         self.act_dim = act_dim
         self.num_agents = num_agents
