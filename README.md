@@ -1,4 +1,4 @@
-# Competition_1v1snakes
+# Competition_3v3snakes
 
 ### Dependency
 You need to create competition environment.
