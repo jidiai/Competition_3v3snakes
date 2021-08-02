@@ -2,7 +2,8 @@
 
 ### Environment
 
-![image](https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/snakesdemo.gif)
+<!-- ![image](https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/snakesdemo.gif) -->
+<img src="https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/snakesdemo.gif" alt="Competition_3v3snakes" width="100" height="50" align="middle" />
 
 Check details in Jidi Competition [RLChina2021智能体竞赛](http://www.jidiai.cn/compete_detail?compete=6)
 
