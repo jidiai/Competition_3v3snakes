@@ -171,14 +171,11 @@ if __name__ == "__main__":
     render_mode = True
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--my_ai", default="greedy", help="rl/random/greedy")
-    parser.add_argument("--opponent", default="greedy", help="rl/random/greedy")
+    parser.add_argument("--my_ai", default="random", help="rl/random/greedy")
+    parser.add_argument("--opponent", default="rl", help="rl/random/greedy")
     args = parser.parse_args()
 
     policy_list = [args.my_ai, args.opponent]
-
-    # print("可选policy 名称类型:", get_valid_agents())
-    policy_list = ["rl", "random"]
 
     multi_part_agent_ids, actions_space = get_players_and_action_space_list(game)
     run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
