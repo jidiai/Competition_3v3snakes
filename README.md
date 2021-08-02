@@ -14,7 +14,7 @@ You need to create competition environment.
 
 You can edit different parameters, for example
 
->python rl_trainer/bicnet/bicnet_snake.py --epsilon 0.5
+>python rl_trainer/main.py --algo bicnet --epsilon 0.5
 
 ### How to test submission 
 You can locally test your submission. At Jidi platform, we evaluate your submission as same as **run_log.py**
