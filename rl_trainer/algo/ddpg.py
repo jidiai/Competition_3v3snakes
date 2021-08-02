@@ -132,14 +132,13 @@ class DDPG:
         else:
             sys.exit(f'Model not founded!')
 
-    def save_model(self, episode):
-        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trained_model')
-
+    def save_model(self, run_dir, episode):
+        base_path = os.path.join(run_dir, 'trained_model')
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
         model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
-        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
-
         torch.save(self.actor.state_dict(), model_actor_path)
+
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
         torch.save(self.critic.state_dict(), model_critic_path)

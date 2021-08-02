@@ -11,6 +11,7 @@ base_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(base_dir))
 from algo.ddpg import DDPG
 from common import *
+from log_path import *
 from env.chooseenv import make
 
 
@@ -23,7 +24,7 @@ def main(args):
     print(f'model episode: {args.model_episode}')
     print(f'save interval: {args.save_interval}')
 
-    env = make('snakes_3v3', conf=None)
+    env = make(args.game_name, conf=None)
 
     num_agents = env.n_player
     print(f'Total agent number: {num_agents}')
@@ -43,9 +44,10 @@ def main(args):
 
     torch.manual_seed(args.seed)
 
-    base_path = os.path.dirname(os.path.abspath(__file__))
-    tensorboard_path = os.path.join(base_path, 'tensorboard', args.log_dir)
-    writer = SummaryWriter(log_dir=tensorboard_path)
+    # 定义保存路径
+    run_dir, log_dir = make_logpath(args.game_name, args.algo)
+    writer = SummaryWriter(str(log_dir))
+    save_config(args, log_dir)
 
     model = DDPG(obs_dim, act_dim, ctrl_agent_num, args)
     # model.load_model()
@@ -121,7 +123,7 @@ def main(args):
                     print(f'\t\t\t\ta_loss {model.a_loss:.3f} c_loss {model.c_loss:.3f}')
 
                 if episode % args.save_interval == 0:
-                    model.save_model(episode)
+                    model.save_model(run_dir, episode)
 
                 env.reset()
                 break
@@ -129,6 +131,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--game_name', default="snakes_3v3", type=str)
     parser.add_argument('--algo', default="ddpg", type=str, help="bicnet/ddpg")
     parser.add_argument('--max_episodes', default=50000, type=int)
     parser.add_argument('--episode_length', default=200, type=int)

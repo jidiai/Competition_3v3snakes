@@ -70,6 +70,7 @@ def get_observations(state, agents_index, obs_dim, height, width):
     snake_map = make_grid_map(board_width, board_height, beans_positions, snakes_positions)
     state = np.array(snake_map)
     state = np.squeeze(snake_map, axis=2)
+    print("state_map: ", state)
 
     observations = np.zeros((len(agents_index), obs_dim))
     snakes_position = np.array(snakes_positions_list, dtype=object)
@@ -132,7 +133,7 @@ class Actor(nn.Module):
         return out
 
 
-class BiCNet:
+class DDPG:
     def __init__(self, obs_dim, act_dim, num_agent):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -162,7 +163,7 @@ def to_joint_action(action):
     return joint_action_
 
 
-agent = BiCNet(26, 4, 3)
+agent = DDPG(26, 4, 3)
 agent.load_model('actor_2000.pth')
 
 

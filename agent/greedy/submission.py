@@ -81,8 +81,7 @@ def my_controller(observation, action_space_list, is_act_continuous):
     board_width = obs['board_width']
     board_height = obs['board_height']
     beans_positions = obs[1]
-    snakes_positions = {key: obs[key] for key in obs.keys() & {2, 3, 4, 5, 6}} # 5p
-    # snakes_positions = {key: obs[key] for key in obs.keys() & {2, 3, 4, 5, 6, 7}} # 3v3
+    snakes_positions = {key: obs[key] for key in obs.keys() & {2, 3, 4, 5, 6, 7}} # 3v3
     snake_map = make_grid_map(board_width, board_height, beans_positions, snakes_positions)
     state_map = np.squeeze(np.array(snake_map), axis=2)
 

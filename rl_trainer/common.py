@@ -6,6 +6,8 @@ import copy
 from typing import Union
 from torch.distributions import Categorical
 # from algos.greedy_pop.submission import greedy_snake
+import os
+import yaml
 
 device = torch.device("cuda:1") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -107,7 +109,6 @@ def get_observations(state, agents_index, obs_dim, height, width):
     # snakes_position = np.array(info['snakes_position'], dtype=object)
     # beans_position = np.array(info['beans_position'], dtype=object).flatten()
     # # print(f'state:\n{state}')
-
     state_copy = state[0].copy()
     board_width = state_copy['board_width']
     board_height = state_copy['board_height']
@@ -137,9 +138,8 @@ def get_observations(state, agents_index, obs_dim, height, width):
         observations[i][6:16] = beans_position[:]
 
         # other snake positions
-        snake_heads = [snake[0] for snake in snakes_position]
-        snake_heads = np.array(snake_heads[1:])
-        snake_heads -= snakes_position[i][0]
+        snake_heads = np.array([snake[0] for snake in snakes_position])
+        snake_heads = np.delete(snake_heads, i, 0)
         observations[i][16:] = snake_heads.flatten()[:]
     return observations
 
@@ -220,3 +220,9 @@ def get_surrounding(state, width, height, x, y):
                    state[y][(x + 1) % width]]  # right
 
     return surrounding
+
+
+def save_config(args, save_path):
+    file = open(os.path.join(str(save_path), 'config.yaml'), mode='w', encoding='utf-8')
+    yaml.dump(vars(args), file)
+    file.close()
