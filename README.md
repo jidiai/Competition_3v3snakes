@@ -35,8 +35,7 @@ For example,
 ### Ready to submit 
 
 1. Random policy --> **agent/random/submission.py**
-2. Greedy policy --> **agent/greedy/submission.py**
-3. RL policy --> **agent/rl/submission.py** and **actor_2000.pth**
+2. RL policy --> **all files in agent/rl/**
 
 [comment]: <> (## Content)
 
