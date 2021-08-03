@@ -20,13 +20,14 @@ You need to create competition environment.
 
 >python rl_trainer/main.py
 
-By default-parameters, yhe total reward of training is shown below.
+By default-parameters, the total reward of training is shown below.
+
 ![image](https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/training.png)
 
 
 You can edit different parameters, for example
 
->python rl_trainer/main.py --algo "bicnet" --epsilon 0.5
+>python rl_trainer/main.py --algo "bicnet" --epsilon 0.8
 
 ### How to test submission 
 You can locally test your submission. At Jidi platform, we evaluate your submission as same as **run_log.py**
