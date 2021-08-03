@@ -5,7 +5,6 @@ import math
 import copy
 from typing import Union
 from torch.distributions import Categorical
-# from algos.greedy_pop.submission import greedy_snake
 import os
 import yaml
 
@@ -98,17 +97,12 @@ def greedy_snake(state_map, beans, snakes, width, height, ctrl_agent_index):
         actions.append(next_distances.index(min(next_distances)))
     return actions
 
+
 # Self position:        0:head_x; 1:head_y
 # Head surroundings:    2:head_up; 3:head_down; 4:head_left; 5:head_right
 # Beans positions:      (6, 7) (8, 9) (10, 11) (12, 13) (14, 15)
 # Other snake positions: (16, 17) (18, 19) (20, 21) (22, 23) (24, 25) -- (other_x - self_x, other_y - self_y)
 def get_observations(state, agents_index, obs_dim, height, width):
-    # state = np.array(state)
-    # state = np.squeeze(state, axis=2)
-    # observations = np.zeros((len(agents_index), obs_dim))
-    # snakes_position = np.array(info['snakes_position'], dtype=object)
-    # beans_position = np.array(info['beans_position'], dtype=object).flatten()
-    # # print(f'state:\n{state}')
     state_copy = state[0].copy()
     board_width = state_copy['board_width']
     board_height = state_copy['board_height']

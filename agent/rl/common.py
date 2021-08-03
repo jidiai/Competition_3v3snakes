@@ -56,11 +56,9 @@ def get_observations(state, agents_index, obs_dim, height, width):
         observations[i][6:16] = beans_position[:]
 
         # other snake positions
-        snake_heads = [snake[0] for snake in snakes_position]
-        snake_heads = np.array(snake_heads[1:])
-        snake_heads -= snakes_position[i][0]
+        snake_heads = np.array([snake[0] for snake in snakes_position])
+        snake_heads = np.delete(snake_heads, i, 0)
         observations[i][16:] = snake_heads.flatten()[:]
-
     return observations
 
 

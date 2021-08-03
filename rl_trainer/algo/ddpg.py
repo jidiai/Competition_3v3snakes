@@ -115,11 +115,11 @@ class DDPG:
     def get_loss(self):
         return self.c_loss, self.a_loss
 
-    def load_model(self):
+    def load_model(self, run_dir, episode):
         print(f'\nBegin to load model: ')
-        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trained_model')
-        model_actor_path = os.path.join(base_path, "actor_" + str(self.model_episode) + ".pth")
-        model_critic_path = os.path.join(base_path, "critic_" + str(self.model_episode) + ".pth")
+        base_path = os.path.join(run_dir, 'trained_model')
+        model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
         print(f'Actor path: {model_actor_path}')
         print(f'Critic path: {model_critic_path}')
 

@@ -50,7 +50,9 @@ def main(args):
     save_config(args, log_dir)
 
     model = DDPG(obs_dim, act_dim, ctrl_agent_num, args)
-    # model.load_model()
+    if args.load_model:
+        load_dir = os.path.join('/'.join(str(run_dir).split('/')[:-1]), 'run' + str(args.load_model_run))
+        model.load_model(load_dir, episode=args.load_model_run_episode)
 
     episode = 0
 
@@ -150,6 +152,10 @@ if __name__ == '__main__':
     parser.add_argument("--save_interval", default=1000, type=int)
     parser.add_argument("--model_episode", default=0, type=int)
     parser.add_argument('--log_dir', default=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+
+    parser.add_argument("--load_model", action='store_true')  # 加是true；不加为false
+    parser.add_argument("--load_model_run", default=2, type=int)
+    parser.add_argument("--load_model_run_episode", default=4000, type=int)
 
     args = parser.parse_args()
     main(args)
