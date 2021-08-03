@@ -60,12 +60,6 @@ def get_joint_action_eval(game, multi_part_agent_ids, policy_list, actions_space
             raise Exception("可选obs类型：%s" % str(obs_type))
 
         agents_id_list = multi_part_agent_ids[policy_i]
-        # if game.obs_type[policy_i] == "grid":
-        #     obs_list = game.get_grid_many_observation(game.current_state, players_id_list, info_before)
-        # elif game.obs_type[policy_i] == "vector":
-        #     obs_list = game.get_vector_many_observation(game.current_state, players_id_list, info_before)
-        # elif game.obs_type[policy_i] == "dict":
-        #     obs_list = game.get_dict_many_observation(game.current_state, players_id_list, info_before)
 
         action_space_list = actions_spaces[policy_i]
         function_name = 'm%d' % policy_i
@@ -73,9 +67,6 @@ def get_joint_action_eval(game, multi_part_agent_ids, policy_list, actions_space
             agent_id = agents_id_list[i]
             a_obs = all_observes[agent_id]
             each = eval(function_name)(a_obs, action_space_list[i], game.is_act_continuous)
-            # if len(each) != game.agent_nums[policy_i]:
-            #     error = "模型%d动作空间维度%d不正确！应该是%d" % (int(t_agents_id[policy_i]), len(each), game.agent_nums[policy_i])
-            #     raise Exception(error)
             joint_action.append(each)
     return joint_action
 
@@ -124,7 +115,6 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
                  "map_size": g.map_size if hasattr(g, "map_size") else None}
 
     steps = []
-    info_before = ''
     all_observes = g.all_observes
     while not g.is_terminal():
         step = "step%d" % g.step_cnt
@@ -151,6 +141,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
     game_info["winner"] = g.check_win()
     game_info["winner_information"] = g.won
     game_info["n_return"] = g.n_return
+    game_info["names"] = policy_list
     ed = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     game_info["end_time"] = ed
     logs = json.dumps(game_info, ensure_ascii=False, cls=NpEncoder)
