@@ -157,8 +157,7 @@ if __name__ == "__main__":
     env_type = "snakes_3v3"
     game = make(env_type)
 
-    # 针对"classic_"环境，使用gym core 进行render;
-    # 非"classic_"环境，使用replay工具包的replay.html，通过上传.json进行网页回放
+    # 使用replay工具包的replay.html，通过上传logs/.json进行网页回放
     render_mode = True
 
     parser = argparse.ArgumentParser()

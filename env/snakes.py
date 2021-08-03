@@ -4,9 +4,7 @@
 # 描述：
 from env.simulators.gridgame import GridGame
 import random
-from itertools import count
 import numpy as np
-from PIL import ImageDraw, ImageFont
 from env.obs_interfaces.observation import *
 from utils.discrete import Discrete
 import itertools
