@@ -20,6 +20,10 @@ You need to create competition environment.
 
 >python rl_trainer/main.py
 
+By default-parameters, yhe total reward of training is shown below.
+![image](https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/training.png)
+
+
 You can edit different parameters, for example
 
 >python rl_trainer/main.py --algo "bicnet" --epsilon 0.5
