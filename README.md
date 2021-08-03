@@ -21,6 +21,7 @@ You need to create competition environment.
 >python rl_trainer/main.py
 
 By default-parameters, yhe total reward of training is shown below.
+
 ![image](https://github.com/jidiai/Competition_3v3snakes/blob/master/assets/training.png)
 
 
