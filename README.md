@@ -16,6 +16,9 @@ You need to create competition environment.
 
 >pip install -r requirements.txt
 
+If your device is Mac M1, try the command below 
+>conda install pytorch torchvision matplotlib gym tensorboardX pillow numpy tabulate pyyaml
+
 ---
 ### How to train rl-agent
 
