@@ -1,8 +1,7 @@
 import numpy as np
 import torch
 import random
-from agent.rl.common import get_observations
-from agent.rl.submission import agent
+from agent.rl.submission import agent, get_observations
 from env.chooseenv import make
 from tabulate import tabulate
 import argparse
