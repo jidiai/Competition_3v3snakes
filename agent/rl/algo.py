@@ -5,7 +5,7 @@ import numpy as np
 
 
 HIDDEN_SIZE=256
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+device =  torch.device("cpu")
 
 from typing import Union
 Activation = Union[str, nn.Module]
@@ -66,17 +66,21 @@ class RLAgent(object):
     def choose_action(self, obs):
         obs = torch.Tensor([obs]).to(self.device)
         logits = self.actor(obs).cpu().detach().numpy()[0]
+        return logits
+
+    def select_action_to_env(self, obs, ctrl_index):
+        logits = self.choose_action(obs)
         actions = logits2action(logits)
-        action_to_env = to_joint_action(actions)
+        action_to_env = to_joint_action(actions, ctrl_index)
         return action_to_env
 
     def load_model(self, filename):
         self.actor.load_state_dict(torch.load(filename))
 
 
-def to_joint_action(action):
+def to_joint_action(action, ctrl_index):
     joint_action_ = []
-    action_a = action[0]
+    action_a = action[ctrl_index]
     each = [0] * 4
     each[action_a] = 1
     joint_action_.append(each)

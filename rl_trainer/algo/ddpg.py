@@ -10,6 +10,7 @@ from replay_buffer import ReplayBuffer
 from common import soft_update, hard_update, device
 from algo.network import Actor, Critic
 
+
 class DDPG:
 
     def __init__(self, obs_dim, act_dim, num_agent, args):

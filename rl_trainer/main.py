@@ -1,9 +1,7 @@
-import os
 import argparse
 import datetime
 
 from tensorboardX import SummaryWriter
-import os
 
 from pathlib import Path
 import sys
@@ -50,8 +48,9 @@ def main(args):
     save_config(args, log_dir)
 
     model = DDPG(obs_dim, act_dim, ctrl_agent_num, args)
+
     if args.load_model:
-        load_dir = os.path.join('/'.join(str(run_dir).split('/')[:-1]), 'run' + str(args.load_model_run))
+        load_dir = os.path.join(os.path.dirname(run_dir), "run" + str(args.load_model_run))
         model.load_model(load_dir, episode=args.load_model_run_episode)
 
     episode = 0
@@ -60,7 +59,18 @@ def main(args):
 
         # Receive initial observation state s1
         state = env.reset()
-        obs = get_observations(state, ctrl_agent_index, obs_dim, height, width)
+
+        # During training, since all agents are given the same obs, we take the state of 1st agent.
+        # However, when evaluation in Jidi, each agent get its own state, like state[agent_index]: dict()
+        # more details refer to https://github.com/jidiai/Competition_3v3snakes/blob/master/run_log.py#L68
+        # state: list() ; state[0]: dict()
+        state_to_training = state[0]
+
+        # ======================= feature engineering =======================
+        # since all snakes play independently, we choose first three snakes for training.
+        # Then, the trained model can apply to other agents. ctrl_agent_index -> [0, 1, 2]
+        # Noted, the index is different in obs. please refer to env description.
+        obs = get_observations(state_to_training, ctrl_agent_index, obs_dim, height, width)
 
         episode += 1
         step = 0
@@ -68,17 +78,21 @@ def main(args):
 
         while True:
 
+            # ================================== inference ========================================
             # For each agents i, select and execute action a:t,i = a:i,θ(s_t) + Nt
             logits = model.choose_action(obs)
 
+            # ============================== add opponent actions =================================
+            # we use rule-based greedy agent here. Or, you can switch to random agent.
+            actions = logits_greedy(state_to_training, logits, height, width)
             # actions = logits_random(act_dim, logits)
-            actions = logits_greedy(state, logits, height, width)
 
             # Receive reward [r_t,i]i=1~n and observe new state s_t+1
             next_state, reward, done, _, info = env.step(env.encode(actions))
-            next_obs = get_observations(next_state, ctrl_agent_index, obs_dim, height, width)
+            next_state_to_training = next_state[0]
+            next_obs = get_observations(next_state_to_training, ctrl_agent_index, obs_dim, height, width)
 
-            # reward shaping
+            # ================================== reward shaping ========================================
             reward = np.array(reward)
             episode_reward += reward
             if done:
@@ -98,6 +112,7 @@ def main(args):
 
             done = np.array([done] * ctrl_agent_num)
 
+            # ================================== collect data ========================================
             # Store transition in R
             model.replay_buffer.push(obs, logits, step_reward, next_obs, done)
 

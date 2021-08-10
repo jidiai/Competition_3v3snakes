@@ -46,6 +46,7 @@ def mlp(sizes,
         layers += [nn.Linear(sizes[i], sizes[i + 1]), act]
     return nn.Sequential(*layers)
 
+
 def make_grid_map(board_width, board_height, beans_positions:list, snakes_positions:dict):
     snakes_map = [[[0] for _ in range(board_width)] for _ in range(board_height)]
     for index, pos in snakes_positions.items():
@@ -56,6 +57,7 @@ def make_grid_map(board_width, board_height, beans_positions:list, snakes_positi
         snakes_map[bean[0]][bean[1]][0] = 1
 
     return snakes_map
+
 
 def get_min_bean(x, y, beans_position):
     min_distance = math.inf
@@ -70,6 +72,7 @@ def get_min_bean(x, y, beans_position):
             min_distance = distance
             index = i
     return min_x, min_y, index
+
 
 def greedy_snake(state_map, beans, snakes, width, height, ctrl_agent_index):
     beans_position = copy.deepcopy(beans)
@@ -103,7 +106,7 @@ def greedy_snake(state_map, beans, snakes, width, height, ctrl_agent_index):
 # Beans positions:      (6, 7) (8, 9) (10, 11) (12, 13) (14, 15)
 # Other snake positions: (16, 17) (18, 19) (20, 21) (22, 23) (24, 25) -- (other_x - self_x, other_y - self_y)
 def get_observations(state, agents_index, obs_dim, height, width):
-    state_copy = state[0].copy()
+    state_copy = state.copy()
     board_width = state_copy['board_width']
     board_height = state_copy['board_height']
     beans_positions = state_copy[1]
@@ -112,8 +115,8 @@ def get_observations(state, agents_index, obs_dim, height, width):
     for key, value in snakes_positions.items():
         snakes_positions_list.append(value)
     snake_map = make_grid_map(board_width, board_height, beans_positions, snakes_positions)
-    state = np.array(snake_map)
-    state = np.squeeze(snake_map, axis=2)
+    state_ = np.array(snake_map)
+    state = np.squeeze(state_, axis=2)
 
     observations = np.zeros((3, obs_dim))
     snakes_position = np.array(snakes_positions_list, dtype=object)
@@ -175,7 +178,7 @@ def logits_random(act_dim, logits):
 
 
 def logits_greedy(state, logits, height, width):
-    state_copy = state[0].copy()
+    state_copy = state.copy()
     board_width = state_copy['board_width']
     board_height = state_copy['board_height']
     beans_positions = state_copy[1]
@@ -184,8 +187,8 @@ def logits_greedy(state, logits, height, width):
     for key, value in snakes_positions.items():
         snakes_positions_list.append(value)
     snake_map = make_grid_map(board_width, board_height, beans_positions, snakes_positions)
-    state = np.array(snake_map)
-    state = np.squeeze(snake_map, axis=2)
+    state_ = np.array(snake_map)
+    state = np.squeeze(state_, axis=2)
 
     beans = state_copy[1]
     # beans = info['beans_position']

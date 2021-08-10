@@ -36,20 +36,21 @@ def get_observations(state, agents_index, obs_dim, height, width):
     for key, value in snakes_positions.items():
         snakes_positions_list.append(value)
     snake_map = make_grid_map(board_width, board_height, beans_positions, snakes_positions)
-    state = np.array(snake_map)
-    state = np.squeeze(snake_map, axis=2)
+    state_ = np.array(snake_map)
+    state_ = np.squeeze(state_, axis=2)
 
-    observations = np.zeros((len(agents_index), obs_dim))
+    observations = np.zeros((3, obs_dim))
     snakes_position = np.array(snakes_positions_list, dtype=object)
     beans_position = np.array(beans_positions, dtype=object).flatten()
-    for i in range(len(agents_index)):
-        # self head position
-        observations[i][:2] = snakes_position[i][0][:]
+    for i, element in enumerate(agents_index):
+        # # self head position
+        observations[i][:2] = snakes_positions_list[element][0][:]
 
         # head surroundings
-        head_x = snakes_position[i][0][1]
-        head_y = snakes_position[i][0][0]
-        head_surrounding = get_surrounding(state, 20, 10, head_x, head_y)
+        head_x = snakes_positions_list[element][0][1]
+        head_y = snakes_positions_list[element][0][0]
+
+        head_surrounding = get_surrounding(state_, width, height, head_x, head_y)
         observations[i][2:6] = head_surrounding[:]
 
         # beans positions
