@@ -119,6 +119,7 @@ def main(args):
             model.update()
 
             obs = next_obs
+            state_to_training = next_state_to_training
             step += 1
 
             if args.episode_length <= step or (True in done):
