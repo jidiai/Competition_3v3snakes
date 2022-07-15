@@ -10,9 +10,9 @@ Check details in Jidi Competition [RLChina2021智能体竞赛](http://www.jidiai
 ---
 ### Dependency
 You need to create competition environment.
->conda create -n snake1v1 python=3.6
+>conda create -n snake3v3 python=3.7.5
 
->conda activate snake1v1
+>conda activate snake3v3
 
 >pip install -r requirements.txt
 
