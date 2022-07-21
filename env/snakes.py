@@ -385,8 +385,8 @@ class Snake():
 
     # 超过边界，可以穿越
     def update_position(self, position):
-        position[0] %= self.board_height
-        position[1] %= self.board_width
+        position[0] = (position[0] + self.board_height) % self.board_height
+        position[1] = (position[1] + self.board_width) % self.board_width
         return position
 
     def move_and_add(self, snakes_position):
